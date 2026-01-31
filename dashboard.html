@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Quản lý Sản phẩm</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ Dashboard Quản lý Sản phẩm</h1>
+            <p>Hiển thị toàn bộ sản phẩm từ API</p>
+        </div>
+        <div class="content">
+            <div id="loading" class="loading">Đang tải dữ liệu...</div>
+            <div id="error" class="error" style="display: none;"></div>
+
+            <!-- Search Box -->
+            <div class="search-container" id="searchContainer" style="display: none;">
+                <input type="text" id="searchInput" class="search-input" placeholder="🔍 Tìm kiếm sản phẩm theo tên..."
+                    onchange="filterProducts()">
+                <div class="search-info" id="searchInfo"></div>
+            </div>
+
+            <!-- Sorting Controls -->
+            <div class="sorting-controls" id="sortingControls" style="display: none;">
+                <div class="sort-label">Sắp xếp:</div>
+                <div class="sort-buttons">
+                    <button class="sort-btn" onclick="sortProducts('name', 'asc')" title="Tên A-Z">
+                        📝 Tên ↑
+                    </button>
+                    <button class="sort-btn" onclick="sortProducts('name', 'desc')" title="Tên Z-A">
+                        📝 Tên ↓
+                    </button>
+                    <button class="sort-btn" onclick="sortProducts('price', 'asc')" title="Giá tăng dần">
+                        💰 Giá ↑
+                    </button>
+                    <button class="sort-btn" onclick="sortProducts('price', 'desc')" title="Giá giảm dần">
+                        💰 Giá ↓
+                    </button>
+                    <button class="sort-btn reset-btn" onclick="resetSort()" title="Bỏ sắp xếp">
+                        🔄 Reset
+                    </button>
+                </div>
+                <div class="sort-info" id="sortInfo"></div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="pagination-controls" id="paginationControls" style="display: none;">
+                <div class="items-per-page">
+                    <label for="itemsPerPage">Hiển thị:</label>
+                    <select id="itemsPerPage" onchange="changeItemsPerPage()">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="20">20</option>
+                    </select>
+                    <span>sản phẩm/trang</span>
+                </div>
+                <div class="page-info" id="pageInfo"></div>
+            </div>
+
+            <div class="table-container" id="tableContainer" style="display: none;">
+                <table id="productTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Danh mục</th>
+                            <th>Mô tả</th>
+                            <th>Hình ảnh</th>
+                            <th>Ngày tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Navigation -->
+            <div class="pagination-nav" id="paginationNav" style="display: none;">
+                <button id="prevBtn" onclick="previousPage()" class="page-btn">← Trang trước</button>
+                <div class="page-numbers" id="pageNumbers"></div>
+                <button id="nextBtn" onclick="nextPage()" class="page-btn">Trang sau →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal để xem ảnh full size -->
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
