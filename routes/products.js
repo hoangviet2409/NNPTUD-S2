@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
-let {ConvertTitleToSlug} = require('../utils/titleHandler')
-let {getMaxID} = require('../utils/IdHandler')
+let { ConvertTitleToSlug } = require('../utils/titleHandler')
+let { getMaxID } = require('../utils/IdHandler')
 let data = [
   {
     "id": 1,
@@ -1167,10 +1167,39 @@ let data = [
 router.get('/', function (req, res, next) {
   let queries = req.query;
   let titleQ = queries.title ? queries.title : '';
-  let minPrice = queries.minPrice ? queries.minPrice : 0;
-  let maxPrice = queries.maxPrice ? queries.maxPrice : 1E6;
-  let page = queries.page ? queries.page : 1;
-  let limit = queries.limit ? queries.limit : 10;
+
+  // Validate and parse numeric parameters
+  let minPrice = queries.minPrice ? parseFloat(queries.minPrice) : 0;
+  let maxPrice = queries.maxPrice ? parseFloat(queries.maxPrice) : 1E6;
+  let page = queries.page ? parseInt(queries.page) : 1;
+  let limit = queries.limit ? parseInt(queries.limit) : 10;
+
+  // Validate page and limit are positive integers
+  if (isNaN(page) || page < 1 || !Number.isInteger(parseFloat(queries.page || '1'))) {
+    return res.status(400).send({
+      "message": "page must be a positive integer"
+    });
+  }
+
+  if (isNaN(limit) || limit < 1 || !Number.isInteger(parseFloat(queries.limit || '10'))) {
+    return res.status(400).send({
+      "message": "limit must be a positive integer"
+    });
+  }
+
+  // Validate price range
+  if (isNaN(minPrice) || isNaN(maxPrice)) {
+    return res.status(400).send({
+      "message": "minPrice and maxPrice must be valid numbers"
+    });
+  }
+
+  if (maxPrice < minPrice) {
+    return res.status(400).send({
+      "message": "maxPrice must be greater than or equal to minPrice"
+    });
+  }
+
   console.log(queries);
   let result = data.filter(
     function (e) {
@@ -1181,6 +1210,22 @@ router.get('/', function (req, res, next) {
   result = result.splice(limit * (page - 1), limit)
   res.send(result);
 });
+//get by slug
+router.get('/slug/:slug', function (req, res, next) {
+  let result = data.find(
+    function (e) {
+      return e.slug === req.params.slug && (!e.isDeleted);
+    }
+  )
+  if (result) {
+    res.send(result);
+  } else {
+    res.status(404).send({
+      "message": "slug not found"
+    });
+  }
+});
+
 //get by ID
 router.get('/:id', function (req, res, next) {
   let result = data.find(
@@ -1199,11 +1244,50 @@ router.get('/:id', function (req, res, next) {
 
 
 router.post('/', function (req, res, next) {
+  // Validate required fields
+  if (!req.body.title || req.body.title.trim() === '') {
+    return res.status(400).send({
+      "message": "title is required and cannot be empty"
+    });
+  }
+
+  if (!req.body.description || req.body.description.trim() === '') {
+    return res.status(400).send({
+      "message": "description is required and cannot be empty"
+    });
+  }
+
+  if (req.body.price === undefined || req.body.price === null || req.body.price === '') {
+    return res.status(400).send({
+      "message": "price is required and cannot be empty"
+    });
+  }
+
+  // Validate price is a number
+  let price = parseFloat(req.body.price);
+  if (isNaN(price)) {
+    return res.status(400).send({
+      "message": "price must be a valid number"
+    });
+  }
+
+  if (!req.body.category) {
+    return res.status(400).send({
+      "message": "category is required and cannot be empty"
+    });
+  }
+
+  if (!req.body.images || !Array.isArray(req.body.images) || req.body.images.length === 0) {
+    return res.status(400).send({
+      "message": "images is required and must be a non-empty array"
+    });
+  }
+
   let newObj = {
     id: (getMaxID(data) + 1) + '',
     title: req.body.title,
     slug: ConvertTitleToSlug(req.body.title),
-    price: req.body.price,
+    price: price,
     description: req.body.description,
     category: req.body.category,
     images: req.body.images,
