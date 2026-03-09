@@ -1,5 +1,6 @@
 var express = require("express");
 let userModel = require("../schemas/users");
+let bcrypt = require('bcrypt');
 module.exports = {
     CreateAnUser: async function (username, password,
         email, role, fullName, avatarUrl, status
@@ -21,9 +22,9 @@ module.exports = {
         return await userModel
             .findOne({
                 _id: id,
-                isDeleted: false 
+                isDeleted: false
             }).populate({
-                path:'role', select:'name'
+                path: 'role', select: 'name'
             });
     },
     FindByUsername: async function (username) {
@@ -39,5 +40,18 @@ module.exports = {
             .find({ isDeleted: false }).
             populate({ path: 'role', select: 'name' })
         return users;
+    },
+    ChangePassword: async function (userId, oldPassword, newPassword) {
+        let user = await userModel.findOne({ _id: userId, isDeleted: false });
+        if (!user) {
+            throw new Error("User khong ton tai");
+        }
+        let isMatch = bcrypt.compareSync(oldPassword, user.password);
+        if (!isMatch) {
+            throw new Error("Mat khau cu khong dung");
+        }
+        user.password = newPassword;
+        await user.save();
+        return user;
     }
 }
